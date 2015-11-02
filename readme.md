@@ -24,11 +24,10 @@ Then in your config/app.php add
 Zhuayi\admin\UploadServiceProvider::class
 ```
 
-If you are going to use Middleware (requires Laravel 5.1 or later) you also need to add
-```php
-'admin' => \Zhuayi\admin\Middleware\AdminMiddleware::class
+Run Publish
+```shell
+php artisan vendor:publish --force
 ```
-to routeMiddleware array in app/Http/Kernel.php.
 
 modify **config/upload.php**   
 
@@ -42,10 +41,6 @@ return [
 ];
 ```
 
-Run Publish
-```shell
-php artisan vendor:publish --force
-```
 
 
 ##Usage
