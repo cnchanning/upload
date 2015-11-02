@@ -1,0 +1,26 @@
+{
+    "name": "zhuayi/upload",
+    "description": "基于laravel的file上传扩展,目前支持七牛云存储",
+    "type": "library",
+    "keywords": ["admin","laravel","illuminate","auth","roles","acl","permission", "upload"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "zhuayi",
+            "email": "2179942@qq.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.5.9",
+        "qiniu/php-sdk": "7.0.5"
+    },
+    "require-dev": {
+        "phpmd/phpmd" : "@stable"
+    },
+    "autoload": {
+        "psr-4": {
+            "Zhuayi\\upload\\": "src/"
+        }
+    },
+    "minimum-stability": "dev"
+}
