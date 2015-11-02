@@ -33,18 +33,26 @@ modify **config/upload.php**
 
 ```php
 return [
-    'accessKey' => accessKey,
-    'secretKey' => secretKey,
-    'bucket' => bucket,
-    'path' => path,
-    'url' => url,
+
+    'default' => 'local',
+    
+    'local' => [
+        'path' => public_path() . '/uploads',
+        'url' => '/uploads',
+    ],
+
+    'qiniu' => [
+        'accessKey' => accessKey,
+        'secretKey' => secretKey,
+        'bucket' => bucket,
+        'path' => path,
+        'url' => url,
+    ]
 ];
 ```
 
 
-
 ##Usage
-
 
 ```php
 $reset = Zhuayi\upload\upload::file('Filedata');

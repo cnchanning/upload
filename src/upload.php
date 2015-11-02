@@ -34,36 +34,68 @@ class upload {
     // 上传失败后的error
     public $error;
 
-    public function __construct()
+    // 配置文件
+    private $config;
+
+    public function __construct($config)
     {
-        $this->auth = new QiniuAuth(Config('upload')['accessKey'], Config('upload')['secretKey']);
-        $this->token = $this->auth->uploadToken(Config('upload')['bucket']);
-        $this->uploadMgr = new UploadManager();
-        $this->path = Config('upload')['path'];
-        $this->url = Config('upload')['url'];
-       
+
+        $this->config = $config;
+        if ($config == 'qiniu') {
+
+            $this->auth = new QiniuAuth(Config('upload')['qiniu']['accessKey'], Config('upload')['qiniu']['secretKey']);
+            $this->token = $this->auth->uploadToken(Config('upload')['qiniu']['bucket']);
+            $this->uploadMgr = new UploadManager();
+        }
+        
+        $this->path = Config('upload')[$config]['path'];
+        $this->url = Config('upload')[$config]['url'];
+
         if (substr($this->url, strlen($this->url) - 1) == "/") {
 
             $this->url = substr($this->url, 0, strlen($this->url) - 1);
         }
     }
 
+    public static function with($config = '') {
+        
+        if (is_null(self::$object)) {
+            self::$object = new self($config);
+        }
+        return self::$object;
+    }
+
+
     public static function file($fileName = '', $newName = '') {
 
         if (is_null(self::$object)) {
-            self::$object = new self;
+            self::$object = new self(Config('upload')['default']);
         }
-        
-        $file = self::$object->file = Input::file($fileName);
+
+        self::$object->file = Input::file($fileName);
 
         if (empty($newName)) {
-            self::$object->newName = $newName = self::$object->path.'/'.uniqid() ."." . $file->getClientOriginalExtension();
+            self::$object->newName = $newName = self::$object->path.'/'.uniqid() ."." . self::$object->file->getClientOriginalExtension();
         } else {
 
             self::$object->newName = $newName = self::$object->path.'/'. $newName;
         }
 
-        list($ret, $err) = self::$object->uploadMgr->putFile(self::$object->token, $newName, $file->getRealPath());
+        if (self::$object->config == 'local') {
+            
+           return self::$object->uploadToLocal();
+
+        } else if (self::$object->config == 'qiniu') {
+
+            return self::$object->uploadToQiniu();
+        }
+
+        
+    }
+
+    private function uploadToQiniu() {
+
+        list($ret, $err) = self::$object->uploadMgr->putFile(self::$object->token, self::$object->newName, self::$object->file->getRealPath());
         if (is_null($err)) {
             self::$object->url = self::$object->url."/".$ret['key'];
 
@@ -72,7 +104,18 @@ class upload {
         }
 
         return self::$object;
-        
+    }
+
+    private function uploadToLocal() {
+         if (!is_dir(dirname(self::$object->newName))) {
+            mkdir(dirname(self::$object->newName), 0777, true);
+        }
+
+        self::$object->file->move(dirname(self::$object->newName), basename(self::$object->newName));
+
+        self::$object->url = str_replace(self::$object->path, self::$object->url, self::$object->newName);
+
+        return self::$object;
     }
 
 
