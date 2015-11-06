@@ -92,6 +92,10 @@ class upload {
 
         
     }
+    
+    public function getToken(){
+        return self::$object->token;
+    }
 
     private function uploadToQiniu() {
 
