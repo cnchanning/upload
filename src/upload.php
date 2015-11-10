@@ -36,6 +36,9 @@ class upload {
 
     // 配置文件
     private $config;
+    
+    //上传地址前缀
+    private $prefix;
 
     public function __construct($config)
     {
@@ -49,7 +52,7 @@ class upload {
         }
         
         $this->path = Config('upload')[$config]['path'];
-        $this->url = Config('upload')[$config]['url'];
+        $this->$prefix = Config('upload')[$config]['url'];
 
         if (substr($this->url, strlen($this->url) - 1) == "/") {
 
@@ -66,13 +69,13 @@ class upload {
     }
 
 
-    public static function file($fileName = '', $newName = '') {
+    public static function file($fileName = '', $newName = '',$fromHttp = true) {
 
         if (is_null(self::$object)) {
             self::$object = new self(Config('upload')['default']);
         }
 
-        self::$object->file = Input::file($fileName);
+        self::$object->file = $fromHttp?Input::file($fileName):$fileName;
 
         if (empty($newName)) {
             self::$object->newName = $newName = self::$object->path.'/'.uniqid() ."." . self::$object->file->getClientOriginalExtension();
@@ -101,7 +104,7 @@ class upload {
 
         list($ret, $err) = self::$object->uploadMgr->putFile(self::$object->token, self::$object->newName, self::$object->file->getRealPath());
         if (is_null($err)) {
-            self::$object->url = self::$object->url."/".$ret['key'];
+            self::$object->url = self::$object->$prefix."/".$ret['key'];
 
         } else {
             self::$object->error = $err->message();
@@ -109,9 +112,11 @@ class upload {
 
         return self::$object;
     }
+    
+ 
 
     private function uploadToLocal() {
-         if (!is_dir(dirname(self::$object->newName))) {
+        if (!is_dir(dirname(self::$object->newName))) {
             mkdir(dirname(self::$object->newName), 0777, true);
         }
 
@@ -121,6 +126,6 @@ class upload {
 
         return self::$object;
     }
-
+     
 
 }
