@@ -36,7 +36,7 @@ class upload {
 
     // 配置文件
     private $config;
-    
+
     //上传地址前缀
     private $prefix;
 
@@ -50,9 +50,9 @@ class upload {
             $this->token = $this->auth->uploadToken(Config('upload')['qiniu']['bucket']);
             $this->uploadMgr = new UploadManager();
         }
-        
+
         $this->path = Config('upload')[$config]['path'];
-        $this->$prefix = Config('upload')[$config]['url'];
+        $this->prefix = Config('upload')[$config]['url'];
 
         if (substr($this->url, strlen($this->url) - 1) == "/") {
 
@@ -61,8 +61,9 @@ class upload {
     }
 
     public static function with($config = '') {
-        
+
         if (is_null(self::$object)) {
+
             self::$object = new self($config);
         }
         return self::$object;
@@ -74,8 +75,7 @@ class upload {
         if (is_null(self::$object)) {
             self::$object = new self(Config('upload')['default']);
         }
-
-        self::$object->file = $fromHttp?Input::file($fileName):$fileName;
+        self::$object->file = $fromHttp? Input::file($fileName):$fileName;
 
         if (empty($newName)) {
             self::$object->newName = $newName = self::$object->path.'/'.uniqid() ."." . self::$object->file->getClientOriginalExtension();
@@ -85,26 +85,26 @@ class upload {
         }
 
         if (self::$object->config == 'local') {
-            
-           return self::$object->uploadToLocal();
+
+            return self::$object->uploadToLocal();
 
         } else if (self::$object->config == 'qiniu') {
 
-            return self::$object->uploadToQiniu();
+            return self::$object->uploadToQiniu($fromHttp);
         }
 
-        
+
     }
-    
+
     public function getToken(){
         return self::$object->token;
     }
 
-    private function uploadToQiniu() {
+    private function uploadToQiniu($fromHttp) {
 
-        list($ret, $err) = self::$object->uploadMgr->putFile(self::$object->token, self::$object->newName, self::$object->file->getRealPath());
+        list($ret, $err) = self::$object->uploadMgr->putFile(self::$object->token, self::$object->newName, $fromHttp? self::$object->file->getRealPath():self::$object->file);
         if (is_null($err)) {
-            self::$object->url = self::$object->$prefix."/".$ret['key'];
+            self::$object->url = self::$object->prefix."/".$ret['key'];
 
         } else {
             self::$object->error = $err->message();
@@ -112,8 +112,6 @@ class upload {
 
         return self::$object;
     }
-    
- 
 
     private function uploadToLocal() {
         if (!is_dir(dirname(self::$object->newName))) {
@@ -126,6 +124,4 @@ class upload {
 
         return self::$object;
     }
-     
-
 }
